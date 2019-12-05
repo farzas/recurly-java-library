@@ -30,6 +30,9 @@ public class AccountAcquisition extends RecurlyObject {
     @XmlTransient
     public static final String ACCOUNT_ACQUISITION_RESOURCE = "/acquisition";
 
+    @XmlElement(name = "account_code")
+    private String accountCode;
+
     @XmlElement(name = "cost_in_cents")
     private Integer costInCents;
 
@@ -50,6 +53,14 @@ public class AccountAcquisition extends RecurlyObject {
 
     @XmlElement(name = "updated_at")
     private DateTime updatedAt;
+
+    public String getAccountCode() {
+        return accountCode;
+    }
+
+    public void setAccountCode(final Object accountCode) {
+        this.accountCode = stringOrNull(accountCode);
+    }
 
     public Integer getCostInCents() {
         return costInCents;
@@ -111,6 +122,7 @@ public class AccountAcquisition extends RecurlyObject {
     public String toString() {
         final StringBuilder sb = new StringBuilder("Account{");
         sb.append("href=").append(href);
+        sb.append(", accountCode=").append(accountCode);
         sb.append(", costInCents=").append(costInCents);
         sb.append(", currency=").append(currency);
         sb.append(", channel=").append(channel);
@@ -129,6 +141,9 @@ public class AccountAcquisition extends RecurlyObject {
 
         final AccountAcquisition accountAcquisition = (AccountAcquisition) o;
 
+        if (accountCode!= null ? !accountCode.equals(accountAcquisition.accountCode) : accountAcquisition.accountCode!= null) {
+            return false;
+        }
         if (campaign!= null ? !campaign.equals(accountAcquisition.campaign) : accountAcquisition.campaign!= null) {
             return false;
         }
@@ -160,6 +175,7 @@ public class AccountAcquisition extends RecurlyObject {
     @Override
     public int hashCode() {
         return Objects.hashCode(
+                accountCode,
                 campaign,
                 channel,
                 costInCents,
