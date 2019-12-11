@@ -17,9 +17,10 @@
 
 package com.ning.billing.recurly.model;
 
-import com.google.common.base.Objects;
+import java.math.BigDecimal;
 
 import javax.xml.bind.annotation.XmlElement;
+import com.google.common.base.Objects;
 
 public class AbstractAddOn extends RecurlyObject {
 
@@ -31,6 +32,12 @@ public class AbstractAddOn extends RecurlyObject {
 
     @XmlElement(name = "usage_type")
     protected String usageType;
+
+    @XmlElement(name = "usage_percentage")
+    protected BigDecimal usagePercentage;
+
+    @XmlElement(name = "revenue_schedule_type")
+    private RevenueScheduleType revenueScheduleType;
 
     public String getAddOnCode() {
         return addOnCode;
@@ -56,12 +63,30 @@ public class AbstractAddOn extends RecurlyObject {
         this.usageType = stringOrNull(usageType);
     }
 
+    public BigDecimal getUsagePercentage() {
+        return usagePercentage;
+    }
+
+    public void setUsagePercentage(final Object usagePercentage) {
+        this.usagePercentage = bigDecimalOrNull(usagePercentage);
+    }
+
+    public RevenueScheduleType getRevenueScheduleType() {
+        return revenueScheduleType;
+    }
+
+    public void setRevenueScheduleType(final Object revenueScheduleType) {
+        this.revenueScheduleType = enumOrNull(RevenueScheduleType.class, revenueScheduleType, true);
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("AbstractAddOn{");
         sb.append("addOnCode='").append(addOnCode).append('\'');
         sb.append("measuredUnitId='").append(measuredUnitId).append('\'');
         sb.append("usageType='").append(usageType).append('\'');
+        sb.append("usagePercentage=").append(usagePercentage);
+        sb.append(", revenueScheduleType='").append(revenueScheduleType).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -85,11 +110,26 @@ public class AbstractAddOn extends RecurlyObject {
             return false;
         }
 
+        if (usagePercentage != null ? !usagePercentage.equals(that.usagePercentage) : that.usagePercentage != null) {
+            return false;
+        }
+
+        if (revenueScheduleType != null ? !revenueScheduleType.equals(that.revenueScheduleType) : that.revenueScheduleType != null) {
+            return false;
+        }
+
         return true;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(addOnCode, measuredUnitId, usageType);
+        return Objects.hashCode(
+            addOnCode,
+            measuredUnitId,
+            usageType,
+            usagePercentage,
+            revenueScheduleType
+        );
+
     }
 }

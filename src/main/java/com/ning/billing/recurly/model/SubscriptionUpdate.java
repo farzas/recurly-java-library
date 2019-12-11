@@ -17,33 +17,59 @@
 
 package com.ning.billing.recurly.model;
 
-import javax.xml.bind.annotation.XmlElement;
 import com.google.common.base.Objects;
+
+import javax.xml.bind.annotation.XmlElement;
 
 /**
  * Subscription object for update calls.
  * <p>
  * The timeframe parameter is specific to the update.
  */
-
-/*
-newly added fields:
-    netTerms
-    poNumber
-    couponCode
-    revenueScheduleType
-    remainingBillingCycles
- */
-
 public class SubscriptionUpdate extends AbstractSubscription {
 
     public static enum Timeframe {
         now,
-        renewal
+        renewal,
+        bill_date,
+        term_end
     }
 
     @XmlElement
     private Timeframe timeframe;
+
+    @XmlElement(name = "coupon_code")
+    private String couponCode;
+
+    @XmlElement(name = "collection_method")
+    private String collectionMethod;
+
+    @XmlElement(name = "shipping_address")
+    private ShippingAddress shippingAddress;
+
+    @XmlElement(name = "shipping_address_id")
+    private Long shippingAddressId;
+
+    @XmlElement(name = "net_terms")
+    private Integer netTerms;
+
+    @XmlElement(name = "po_number")
+    private String poNumber;
+
+    @XmlElement(name = "revenue_schedule_type")
+    private RevenueScheduleType revenueScheduleType;
+
+    @XmlElement(name = "remaining_billing_cycles")
+    private Integer remainingBillingCycles;
+
+    @XmlElement(name = "imported_trial")
+    private Boolean importedTrial;
+
+    @XmlElement(name = "renewal_billing_cycles")
+    private Integer renewalBillingCycles;
+
+    @XmlElement(name = "auto_renew")
+    private Boolean autoRenew;
 
     public Timeframe getTimeframe() {
         return timeframe;
@@ -53,78 +79,88 @@ public class SubscriptionUpdate extends AbstractSubscription {
         this.timeframe = timeframe;
     }
 
-    @XmlElement(name = "collection_method")
-    private String collectionMethod;
-
     public String getCollectionMethod() {
         return collectionMethod;
     }
 
-    public void setCollectionMethod(Object collectionMethod) {
+    public void setCollectionMethod(final Object collectionMethod) {
         this.collectionMethod = stringOrNull(collectionMethod);
     }
-
-
-
-    @XmlElement(name = "net_terms")
-    private Integer netTerms;
-
-    public Integer getNetTerms() {
-        return netTerms;
-    }
-
-    public void setNetTerms(Integer netTerms) {
-        this.netTerms = netTerms;
-    }
-
-
-    @XmlElement(name = "po_number")
-    private String poNumber;
-
-    public String getPoNumber() {
-        return poNumber;
-    }
-
-    public void setPoNumber(String poNumber) {
-        this.poNumber = poNumber;
-    }
-
-
-
-    @XmlElement(name = "coupon_code")
-    private String couponCode;
 
     public String getCouponCode() {
         return couponCode;
     }
 
-    public void setCouponCode(String couponCode) {
-        this.couponCode = couponCode;
+    public void setCouponCode(final Object couponCode) {
+        this.couponCode = stringOrNull(couponCode);
     }
 
+    public void setShippingAddress(final ShippingAddress shippingAddress) {
+        this.shippingAddress = shippingAddress;
+    }
 
+    public ShippingAddress getShippingAddress() {
+        return shippingAddress;
+    }
 
-    @XmlElement(name = "revenue_schedule_type")
-    private RevenueScheduleType revenueScheduleType;
+    public void setShippingAddressId(final Object shippingAddressId) {
+        this.shippingAddressId = longOrNull(shippingAddressId);
+    }
+
+    public Integer getNetTerms() {
+        return netTerms;
+    }
+
+    public void setNetTerms(final Object netTerms) {
+        this.netTerms = integerOrNull(netTerms);
+    }
+
+    public String getPoNumber() {
+        return poNumber;
+    }
+
+    public void setPoNumber(Object poNumber) {
+        this.poNumber = stringOrNull(poNumber);
+    }
 
     public RevenueScheduleType getRevenueScheduleType() {
         return revenueScheduleType;
     }
 
-    public void setRevenueScheduleType(RevenueScheduleType revenueScheduleType) {
-        this.revenueScheduleType = revenueScheduleType;
+    public void setRevenueScheduleType(final Object revenueScheduleType) {
+        this.revenueScheduleType = enumOrNull(RevenueScheduleType.class, revenueScheduleType, true);
     }
-
-
-    @XmlElement(name = "remaining_billing_cycles")
-    private Integer remainingBillingCycles;
 
     public Integer getRemainingBillingCycles() {
         return remainingBillingCycles;
     }
 
-    public void setRemainingBillingCycles(Integer remainingBillingCycles) {
-        this.remainingBillingCycles = remainingBillingCycles;
+    public void setRemainingBillingCycles(final Object remainingBillingCycles) {
+        this.remainingBillingCycles = integerOrNull(remainingBillingCycles);
+    }
+
+    public Boolean getImportedTrial() {
+        return this.importedTrial;
+    }
+
+    public void setImportedTrial(final Object importedTrial) {
+        this.importedTrial = booleanOrNull(importedTrial);
+    }
+
+    public Integer getRenewalBillingCycles() {
+        return renewalBillingCycles;
+    }
+
+    public void setRenewalBillingCycles(final Object renewalBillingCycles) {
+        this.renewalBillingCycles = integerOrNull(renewalBillingCycles);
+    }
+
+    public Boolean getAutoRenew() {
+        return this.autoRenew;
+    }
+
+    public void setAutoRenew(final Object autoRenew) {
+        this.autoRenew = booleanOrNull(autoRenew);
     }
 
     @Override
@@ -143,24 +179,34 @@ public class SubscriptionUpdate extends AbstractSubscription {
         if (couponCode != null ? !couponCode.equals(that.couponCode) : that.couponCode != null) {
             return false;
         }
-
-        //newly added
+        if (shippingAddress != null ? !shippingAddress.equals(that.shippingAddress) : that.shippingAddress != null) {
+            return false;
+        }
+        if (shippingAddressId != null ? !shippingAddressId.equals(that.shippingAddressId) : that.shippingAddressId != null) {
+            return false;
+        }
+        if (customFields != null ? !customFields.equals(that.customFields) : that.customFields != null) {
+            return false;
+        }
         if (netTerms != null ? !netTerms.equals(that.netTerms) : that.netTerms != null) {
             return false;
         }
-        if (collectionMethod != null ? !collectionMethod.equals(that.collectionMethod) : that.collectionMethod != null) {
-            return false;
-        }
         if (poNumber != null ? !poNumber.equals(that.poNumber) : that.poNumber != null) {
-            return false;
-        }
-        if (couponCode != null ? !couponCode.equals(that.couponCode) : that.couponCode != null) {
             return false;
         }
         if (revenueScheduleType != null ? !revenueScheduleType.equals(that.revenueScheduleType) : that.revenueScheduleType != null) {
             return false;
         }
         if (remainingBillingCycles != null ? !remainingBillingCycles.equals(that.remainingBillingCycles) : that.remainingBillingCycles != null) {
+            return false;
+        }
+        if (importedTrial != null ? !importedTrial.equals(that.importedTrial) : that.importedTrial != null) {
+            return false;
+        }
+        if (renewalBillingCycles != null ? !renewalBillingCycles.equals(that.renewalBillingCycles) : that.renewalBillingCycles != null) {
+            return false;
+        }
+        if (autoRenew != null ? !autoRenew.equals(that.autoRenew) : that.autoRenew != null) {
             return false;
         }
 
@@ -173,13 +219,16 @@ public class SubscriptionUpdate extends AbstractSubscription {
                 timeframe,
                 couponCode,
                 collectionMethod,
-
-                //newly added
+                shippingAddress,
+                shippingAddressId,
+                customFields,
                 netTerms,
                 poNumber,
-                couponCode,
                 revenueScheduleType,
-                remainingBillingCycles
+                remainingBillingCycles,
+                importedTrial,
+                renewalBillingCycles,
+                autoRenew
         );
     }
 }

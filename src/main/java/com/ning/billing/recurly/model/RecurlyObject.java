@@ -17,6 +17,8 @@
 
 package com.ning.billing.recurly.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.Version;
@@ -37,6 +39,7 @@ import org.joda.time.DateTime;
 
 import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.stream.XMLInputFactory;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
@@ -48,7 +51,7 @@ public abstract class RecurlyObject {
     @XmlTransient
     private RecurlyClient recurlyClient;
 
-//    @XmlTransient
+    @XmlTransient
     protected String href;
 
     public static final String NIL_STR = "nil";
@@ -56,17 +59,21 @@ public abstract class RecurlyObject {
 
     // See https://github.com/killbilling/recurly-java-library/issues/4 for why
     // @JsonIgnore is required here and @XmlTransient is not enough
-//    @JsonIgnore
+    @JsonIgnore
     public String getHref() {
         return href;
     }
 
+    @JsonProperty
     public void setHref(final Object href) {
         this.href = stringOrNull(href);
     }
 
     public static XmlMapper newXmlMapper() {
-        final XmlMapper xmlMapper = new XmlMapper();
+        final XMLInputFactory xmlInputFactory = XMLInputFactory.newFactory();
+        xmlInputFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+        xmlInputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+        final XmlMapper xmlMapper = new XmlMapper(xmlInputFactory);
         xmlMapper.setSerializerProvider(new RecurlyXmlSerializerProvider());
         final AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         final AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(TypeFactory.defaultInstance());
@@ -82,13 +89,16 @@ public abstract class RecurlyObject {
         m.addSerializer(AddOns.class, new RecurlyObjectsSerializer<AddOns, AddOn>(AddOns.class, "add_on"));
         m.addSerializer(Adjustments.class, new RecurlyObjectsSerializer<Adjustments, Adjustment>(Adjustments.class, "adjustment"));
         m.addSerializer(Coupons.class, new RecurlyObjectsSerializer<Coupons, Coupon>(Coupons.class, "coupon"));
+        m.addSerializer(CustomFields.class, new RecurlyObjectsSerializer<CustomFields, CustomField>(CustomFields.class, "custom_field"));
         m.addSerializer(Invoices.class, new RecurlyObjectsSerializer<Invoices, Invoice>(Invoices.class, "invoice"));
         m.addSerializer(Plans.class, new RecurlyObjectsSerializer<Plans, Plan>(Plans.class, "plan"));
         m.addSerializer(RecurlyErrors.class, new RecurlyObjectsSerializer<RecurlyErrors, RecurlyError>(RecurlyErrors.class, "error"));
         m.addSerializer(ShippingAddresses.class, new RecurlyObjectsSerializer<ShippingAddresses, ShippingAddress>(ShippingAddresses.class, "shipping_address"));
+        m.addSerializer(ShippingFees.class, new RecurlyObjectsSerializer<ShippingFees, ShippingFee>(ShippingFees.class, "shipping_fee"));
         m.addSerializer(SubscriptionAddOns.class, new RecurlyObjectsSerializer<SubscriptionAddOns, SubscriptionAddOn>(SubscriptionAddOns.class, "subscription_add_on"));
         m.addSerializer(Subscriptions.class, new RecurlyObjectsSerializer<Subscriptions, Subscription>(Subscriptions.class, "subscription"));
         m.addSerializer(Transactions.class, new RecurlyObjectsSerializer<Transactions, Transaction>(Transactions.class, "transaction"));
+        m.addSerializer(Usages.class, new RecurlyObjectsSerializer<Usages, Usage>(Usages.class, "usage"));
         xmlMapper.registerModule(m);
 
         return xmlMapper;
@@ -103,7 +113,7 @@ public abstract class RecurlyObject {
         // will interpret as an Object (Map), not Booleans.
         if (object instanceof Map) {
             final Map map = (Map) object;
-            if (map.keySet().size() == 2 && "boolean".equals(map.get("type"))) {
+            if (map.keySet().size() == 2 && "boolean".equalsIgnoreCase((String) map.get("type"))) {
                 return Boolean.valueOf((String) map.get(""));
             }
         }
@@ -120,14 +130,25 @@ public abstract class RecurlyObject {
     }
 
     @SuppressWarnings("unchecked")
-    public static <E extends Enum<E>> E enumOrNull(Class<E> enumClass, @Nullable final Object object) {
+    public static <E extends Enum<E>> E enumOrNull(Class<E> enumClass, @Nullable final Object object, final Boolean upCase) {
         if (isNull(object)) {
             return null;
         } else if (enumClass.isAssignableFrom(object.getClass())) {
             return (E) object;
         }
 
-        return (E) Enum.valueOf(enumClass, object.toString().trim());
+        String value =  object.toString().trim();
+
+        if (upCase) {
+            value = value.toUpperCase();
+        }
+
+        return (E) Enum.valueOf(enumClass, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <E extends Enum<E>> E enumOrNull(Class<E> enumClass, @Nullable final Object object) {
+        return enumOrNull(enumClass, object, false);
     }
 
     public static Integer integerOrNull(@Nullable final Object object) {
@@ -139,7 +160,7 @@ public abstract class RecurlyObject {
         // will interpret as an Object (Map), not Integers.
         if (object instanceof Map) {
             final Map map = (Map) object;
-            if (map.keySet().size() == 2 && "integer".equals(map.get("type"))) {
+            if (map.keySet().size() == 2 && "integer".equalsIgnoreCase((String) map.get("type"))) {
                 return Integer.valueOf((String) map.get(""));
             }
         }
@@ -156,7 +177,7 @@ public abstract class RecurlyObject {
         // will interpret as an Object (Map), not Longs.
         if (object instanceof Map) {
             final Map map = (Map) object;
-            if (map.keySet().size() == 2 && "integer".equals(map.get("type"))) {
+            if (map.keySet().size() == 2 && "integer".equalsIgnoreCase((String) map.get("type"))) {
                 return Long.valueOf((String) map.get(""));
             }
         }
@@ -173,7 +194,7 @@ public abstract class RecurlyObject {
         // will interpret as an Object (Map), not Longs.
         if (object instanceof Map) {
             final Map map = (Map) object;
-            if (map.keySet().size() == 2 && "float".equals(map.get("type"))) {
+            if (map.keySet().size() == 2 && "float".equalsIgnoreCase((String) map.get("type"))) {
                 return new BigDecimal((String) map.get(""));
             }
         }
@@ -186,11 +207,11 @@ public abstract class RecurlyObject {
             return null;
         }
 
-        // DateTimes are represented as objects (e.g. <created_at type="datetime">2011-04-19T07:00:00Z</created_at>), which Jackson
+        // DateTimes are represented as objects (e.g. <created_at type="dateTime">2011-04-19T07:00:00Z</created_at>), which Jackson
         // will interpret as an Object (Map), not DateTimes.
         if (object instanceof Map) {
             final Map map = (Map) object;
-            if (map.keySet().size() == 2 && "datetime".equals(map.get("type"))) {
+            if (map.keySet().size() == 2 && "dateTime".equalsIgnoreCase((String) map.get("type"))) {
                 return new DateTime(map.get(""));
             }
         }
