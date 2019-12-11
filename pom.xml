@@ -25,7 +25,7 @@
     <groupId>com.ning.billing.tplinkra</groupId>
     <artifactId>recurly-java-library</artifactId>
     <packaging>jar</packaging>
-    <version>0.11.5</version>
+    <version>1.0.0</version>
     <name>Recurly Java library</name>
     <description>Java library for Recurly</description>
     <url>http://github.com/killbilling/recurly-java-library</url>
@@ -271,6 +271,8 @@
                             <excludes>
                                 <!-- For some reason, useIdeaDefaultExcludes
                                     doesn't pick up .idea directory -->
+                                <exclude>.github/**</exclude>
+                                <exclude>.vscode/**</exclude>
                                 <exclude>.idea/**</exclude>
                                 <exclude>**/.project</exclude>
                                 <exclude>.git/**</exclude>
@@ -290,6 +292,7 @@
                                 <exclude>**/test-output/**</exclude>
                                 <exclude>**/target/**</exclude>
                                 <exclude>**/.settings/**</exclude>
+                                <exclude>scripts/**</exclude>
                                 <exclude>.travis.yml</exclude>
                                 <exclude>travis-test.sh</exclude>
                                 <exclude>bin/**</exclude>
