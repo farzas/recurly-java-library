@@ -58,6 +58,8 @@ import com.ning.billing.recurly.model.SubscriptionState;
 import com.ning.billing.recurly.model.SubscriptionUpdate;
 import com.ning.billing.recurly.model.SubscriptionNotes;
 import com.ning.billing.recurly.model.Subscriptions;
+import com.ning.billing.recurly.model.Tier;
+import com.ning.billing.recurly.model.Tiers;
 import com.ning.billing.recurly.model.Transaction;
 import com.ning.billing.recurly.model.TransactionState;
 import com.ning.billing.recurly.model.TransactionType;
@@ -69,7 +71,7 @@ import com.ning.billing.recurly.model.MeasuredUnits;
 import com.ning.billing.recurly.model.AccountAcquisition;
 import com.ning.billing.recurly.model.ShippingMethod;
 import com.ning.billing.recurly.model.ShippingMethods;
-
+import com.fasterxml.jackson.annotation.JsonTypeInfo.None;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -113,7 +115,7 @@ public class RecurlyClient {
     private static final Logger log = LoggerFactory.getLogger(RecurlyClient.class);
 
     public static final String RECURLY_DEBUG_KEY = "recurly.debug";
-    public static final String RECURLY_API_VERSION = "2.24";
+    public static final String RECURLY_API_VERSION = "2.26";
 
     private static final String X_RATELIMIT_REMAINING_HEADER_NAME = "X-RateLimit-Remaining";
     private static final String X_RECORDS_HEADER_NAME = "X-Records";
@@ -566,6 +568,49 @@ public class RecurlyClient {
         request.setRemainingPauseCycles(remainingPauseCycles);
         return doPUT(Subscription.SUBSCRIPTION_RESOURCE + "/" + subscriptionUuid + "/pause",
                      request, Subscription.class);
+    }
+
+    /**
+     * Convert trial to paid subscription when TransactionType = "moto".
+     * @param subscriptionUuid The uuid for the subscription you want to convert from trial to paid.
+     * @return Subscription
+     */
+    public Subscription convertTrialMoto(final String subscriptionUuid) {
+        Subscription request = new Subscription();
+        request.setTransactionType("moto");
+        return doPUT(Subscription.SUBSCRIPTION_RESOURCE + "/" + subscriptionUuid + "/convert_trial",
+            request, Subscription.class);
+    }
+
+    /**
+     * Convert trial to paid subscription without 3DS token
+     * @param subscriptionUuid The uuid for the subscription you want to convert from trial to paid.
+     * @return Subscription
+     */
+    public Subscription convertTrial(final String subscriptionUuid) {
+        return convertTrial(subscriptionUuid, null);
+    }
+
+    /**
+     * Convert trial to paid subscription with 3DS token
+     * @param subscriptionUuid The uuid for the subscription you want to convert from trial to paid.
+     * @param ThreeDSecureActionResultTokenId 3DS secure action result token id in billing info.
+     * @return Subscription
+     */
+    public Subscription convertTrial(final String subscriptionUuid, final String ThreeDSecureActionResultTokenId) {
+        Subscription request;
+        if (ThreeDSecureActionResultTokenId == null) {
+            request = null;
+        } else {
+            request = new Subscription();
+            Account account = new Account();
+            BillingInfo billingInfo = new BillingInfo();
+            billingInfo.setThreeDSecureActionResultTokenId(ThreeDSecureActionResultTokenId); 
+            account.setBillingInfo(billingInfo);
+            request.setAccount(account);   
+        }
+        return doPUT(Subscription.SUBSCRIPTION_RESOURCE + "/" + subscriptionUuid + "/convert_trial",
+            request, Subscription.class);
     }
 
     /**
@@ -1053,6 +1098,22 @@ public class RecurlyClient {
             url = url + "?amount_in_cents=" + (amount.intValue() * 100);
         }
         doDELETE(url);
+    }
+
+    /**
+     * Get the subscriptions for a {@link Transaction}.
+     * <p>
+     * Returns subscriptions associated with a transaction
+     *
+     * @param transactionId recurly transaction id
+     * @return Subscriptions on the transaction
+     */
+    public Subscriptions getTransactionSubscriptions(final String transactionId) {
+        return doGET(Transactions.TRANSACTIONS_RESOURCE
+                        + "/" + transactionId
+                        + Subscriptions.SUBSCRIPTIONS_RESOURCE,
+                Subscriptions.class,
+                new QueryParams());
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1866,7 +1927,7 @@ public class RecurlyClient {
      * @return the coupon redemptions for this invoice on success, null otherwise
      */
     public Redemptions getCouponRedemptionsByInvoice(final String invoiceId, final QueryParams params) {
-        return doGET(Invoices.INVOICES_RESOURCE + "/" + invoiceId + Redemption.REDEMPTION_RESOURCE,
+        return doGET(Invoices.INVOICES_RESOURCE + "/" + invoiceId + Redemption.REDEMPTIONS_RESOURCE,
                 Redemptions.class, params);
     }
 
@@ -2634,4 +2695,5 @@ public class RecurlyClient {
         final Matcher matcher = TAG_FROM_GIT_DESCRIBE_PATTERN.matcher(gitDescribe);
         return matcher.find() ? matcher.group(1) : null;
     }
+
 }
