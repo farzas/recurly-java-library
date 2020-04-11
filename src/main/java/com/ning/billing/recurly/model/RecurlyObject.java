@@ -225,6 +225,13 @@ public abstract class RecurlyObject {
             return true;
         }
 
+        if (object instanceof String) {
+            final String str = (String) object;
+            if (str.length() == 0) {
+                return true;
+            }
+        }
+
         // Hack to work around Recurly output for nil values: the response will contain
         // an element with a nil attribute (e.g. <city nil="nil"></city> or <username nil="true"></username>) which Jackson will
         // interpret as an Object (Map), not a String.
