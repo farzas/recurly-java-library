@@ -97,6 +97,7 @@ public abstract class RecurlyObject {
         m.addSerializer(ShippingFees.class, new RecurlyObjectsSerializer<ShippingFees, ShippingFee>(ShippingFees.class, "shipping_fee"));
         m.addSerializer(SubscriptionAddOns.class, new RecurlyObjectsSerializer<SubscriptionAddOns, SubscriptionAddOn>(SubscriptionAddOns.class, "subscription_add_on"));
         m.addSerializer(Subscriptions.class, new RecurlyObjectsSerializer<Subscriptions, Subscription>(Subscriptions.class, "subscription"));
+        m.addSerializer(Tiers.class, new RecurlyObjectsSerializer<Tiers,Tier>(Tiers.class, "tier"));
         m.addSerializer(Transactions.class, new RecurlyObjectsSerializer<Transactions, Transaction>(Transactions.class, "transaction"));
         m.addSerializer(Usages.class, new RecurlyObjectsSerializer<Usages, Usage>(Usages.class, "usage"));
         xmlMapper.registerModule(m);
@@ -222,6 +223,13 @@ public abstract class RecurlyObject {
     public static boolean isNull(@Nullable final Object object) {
         if (object == null) {
             return true;
+        }
+
+        if (object instanceof String) {
+            final String str = (String) object;
+            if (str.length() == 0) {
+                return true;
+            }
         }
 
         // Hack to work around Recurly output for nil values: the response will contain
